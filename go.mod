@@ -1,4 +1,4 @@
-module github.com/ForbiddenR/autocommit
+module github.com/ForbiddenR/auto-commit
 
 go 1.20
 

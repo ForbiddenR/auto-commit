@@ -6,8 +6,8 @@ package main
 import (
 	"os"
 
-	"github.com/ForbiddenR/autocommit/cmd"
-	"github.com/ForbiddenR/autocommit/cmd/commit"
+	"github.com/ForbiddenR/auto-commit/cmd"
+	"github.com/ForbiddenR/auto-commit/cmd/commit"
 	"github.com/joho/godotenv"
 )
 

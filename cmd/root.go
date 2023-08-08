@@ -6,7 +6,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/ForbiddenR/autocommit/cmd/commit"
+	"github.com/ForbiddenR/auto-commit/cmd/commit"
 	"github.com/spf13/cobra"
 )
 
