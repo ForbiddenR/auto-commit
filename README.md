@@ -3,13 +3,13 @@
 ## Usage
 
 ```bash
-go get github.com/ForbiddenR/auto-commit@latest
+go get github.com/ForbiddenR/autocommit@latest
 ```
 
 ## Installation
 
 ```bash
-go install github.com/ForbiddenR/auto-commit@latest
+go install github.com/ForbiddenR/autocommit@latest
 ```
 
 ## License
