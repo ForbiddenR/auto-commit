@@ -18,5 +18,6 @@ func main() {
 	}
 	commit.User = os.Getenv("USERNAME")
 	commit.Email = os.Getenv("EMAIL")
+	commit.Author = os.Getenv("AUTHOR")
 	cmd.Execute()
 }

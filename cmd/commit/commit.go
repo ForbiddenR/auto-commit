@@ -3,16 +3,20 @@ package commit
 import (
 	"fmt"
 	"os"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5"
+	"github.com/moby/buildkit/frontend/dockerfile/parser"
 	"github.com/spf13/cobra"
 )
 
 var (
-	User  string
-	Email string
+	User   string
+	Email  string
+	Author string
 )
 
 var message string
@@ -23,13 +27,59 @@ func NewCmdCommit() *cobra.Command {
 		Short: "Commit changes",
 		Long:  `Commit changes to the repository.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			// print the local directory.
-			fmt.Println("Committing changes...")
+			// wd is the working directory.
 			wd, err := os.Getwd()
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println(wd)
+
+			dockerfile := path.Join(wd, "/Dockerfile")
+			df, err := os.Open(dockerfile)
+			if err != nil {
+				panic(err)
+			}
+			defer df.Close()
+			result, err := parser.Parse(df)
+			if err != nil {
+				panic(err)
+			}
+
+			var version string
+			for _, child := range result.AST.Children {
+				if child.Next.Value == "TAG" {
+					if child.Next.Next == nil {
+						panic("TAG value is not set")
+					}
+					version = strings.Split(child.Next.Next.Value, ":")[1]
+					break
+				}
+			}
+
+			mdp := path.Join(wd, "/Version.md")
+			var mf *os.File
+			var new bool
+			_, err = os.Stat(mdp)
+			if os.IsNotExist(err) {
+				mf, err = os.Create(mdp)
+				if err != nil {
+					panic(err)
+				}
+				new = true
+			} else {
+				mf, err = os.OpenFile(mdp, os.O_APPEND|os.O_WRONLY, 0644)
+				if err != nil {
+					panic(err)
+				}
+			}
+			defer mf.Close()
+			if !new {
+				mf.WriteString("\n")
+			}
+			mf.WriteString(fmt.Sprintf("### %s\n", version))
+			mf.WriteString(fmt.Sprintf("+ Author %s %s\n", Author, time.Now().Format("2006.1.2")))
+			mf.WriteString(fmt.Sprintf("+ %s\n", message))
+
+			commits := "[ci-build]" + version
 
 			r, err := git.PlainOpen(wd)
 			if err != nil {
@@ -55,7 +105,7 @@ func NewCmdCommit() *cobra.Command {
 			fmt.Println(status)
 
 			// Commit the changes to the local repository.
-			commit, err := w.Commit(message, &git.CommitOptions{
+			commit, err := w.Commit(commits, &git.CommitOptions{
 				Author: &object.Signature{
 					Name:  User,
 					Email: Email,
@@ -75,7 +125,7 @@ func NewCmdCommit() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&message, "message", "m", "", "Commit message")
+	cmd.Flags().StringVarP(&message, "message", "m", "", "Motifiying message")
 
 	return cmd
 }
