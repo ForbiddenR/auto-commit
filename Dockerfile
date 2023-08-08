@@ -4,7 +4,7 @@ FROM golang:1.20-alpine3.16
 WORKDIR /app
 ENV GO111MODULE=on
 ENV GOPROXY=https://goproxy.cn,direct
-ENV TAG=nixx.xx.com/xxxx/test:0.0.5_230116_beta
+ENV TAG=nixx.xx.com/xxxx/test:0.0.5_230117_beta
 
 
 COPY . .
