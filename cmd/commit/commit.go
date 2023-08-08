@@ -25,7 +25,7 @@ func NewCmdCommit() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "commit",
 		Short: "Commit changes",
-		Long:  `Commit changes to the repository.`,
+		Long:  `Commit changes to the repository. If you have multiple changes, separate them with a comma.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// wd is the working directory.
 			wd, err := os.Getwd()
@@ -77,7 +77,9 @@ func NewCmdCommit() *cobra.Command {
 			}
 			mf.WriteString(fmt.Sprintf("### %s\n", version))
 			mf.WriteString(fmt.Sprintf("+ Author %s %s\n", Author, time.Now().Format("2006.1.2")))
-			mf.WriteString(fmt.Sprintf("+ %s\n", message))
+			for _, v := range strings.Split(message, ",") {
+				mf.WriteString(fmt.Sprintf("+ %s\n", v))
+			}
 
 			commits := "[ci-build]" + version
 
@@ -90,19 +92,24 @@ func NewCmdCommit() *cobra.Command {
 			if err != nil {
 				panic(err)
 			}
+			
+			status, err  := w.Status()
+			if err != nil {
+				panic(err)
+			}
+
+			var modified []string
+			for k := range status {
+				modified = append(modified, k)
+			}
+
+			mf.WriteString(fmt.Sprintf("+ Modified: %s\n", strings.Join(modified, ", ")))
 
 			// Add all files to the staging area.
 			_, err = w.Add(".")
 			if err != nil {
 				panic(err)
 			}
-
-			status, err := w.Status()
-			if err != nil {
-				panic(err)
-			}
-
-			fmt.Println(status)
 
 			// Commit the changes to the local repository.
 			commit, err := w.Commit(commits, &git.CommitOptions{
