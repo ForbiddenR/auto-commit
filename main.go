@@ -11,6 +11,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// The username, email and author are set in the .env file.
+// The commit message is set with the -m flag.
+// The commit message is required.
+// The commit message is split by commas if you have multiple changes.
 func main() {
 	err := godotenv.Load()
 	if err != nil {

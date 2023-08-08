@@ -3,9 +3,8 @@
 + first commit
 + Modified: main.go, cmd/commit/commit.go, cmd/root.go, go.mod
 
-### 0.0.5_230117_beta
+
+### 0.0.5_230118_beta
 + Author Tony Ma 2023.8.8
-+ first commit
-+ second commit
-+ third commit
-+ Modified: Version.md, Dockerfile
++ rebuild the struct of the code
++ Modified: cmd/commit/commit.go, main.go

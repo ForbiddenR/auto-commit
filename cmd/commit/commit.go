@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/moby/buildkit/frontend/dockerfile/parser"
 	"github.com/spf13/cobra"
 )
@@ -34,51 +34,25 @@ func NewCmdCommit() *cobra.Command {
 			}
 
 			dockerfile := path.Join(wd, "/Dockerfile")
-			df, err := os.Open(dockerfile)
+			version, err := getTagFromDockerfile(dockerfile)
 			if err != nil {
 				panic(err)
-			}
-			defer df.Close()
-			result, err := parser.Parse(df)
-			if err != nil {
-				panic(err)
-			}
-
-			var version string
-			for _, child := range result.AST.Children {
-				if child.Next.Value == "TAG" {
-					if child.Next.Next == nil {
-						panic("TAG value is not set")
-					}
-					version = strings.Split(child.Next.Next.Value, ":")[1]
-					break
-				}
 			}
 
 			mdp := path.Join(wd, "/Version.md")
-			var mf *os.File
-			var new bool
-			_, err = os.Stat(mdp)
-			if os.IsNotExist(err) {
-				mf, err = os.Create(mdp)
-				if err != nil {
-					panic(err)
-				}
-				new = true
-			} else {
-				mf, err = os.OpenFile(mdp, os.O_APPEND|os.O_WRONLY, 0644)
-				if err != nil {
-					panic(err)
-				}
+			vf, new, err := getOrCreateVersionFile(mdp)
+			if err != nil {
+				panic(err)
 			}
-			defer mf.Close()
+			defer vf.Close()
+
 			if !new {
-				mf.WriteString("\n")
+				vf.WriteString("\n")
 			}
-			mf.WriteString(fmt.Sprintf("### %s\n", version))
-			mf.WriteString(fmt.Sprintf("+ Author %s %s\n", Author, time.Now().Format("2006.1.2")))
+			vf.WriteString(fmt.Sprintf("### %s\n", version))
+			vf.WriteString(fmt.Sprintf("+ Author %s %s\n", Author, time.Now().Format("2006.1.2")))
 			for _, v := range strings.Split(message, ",") {
-				mf.WriteString(fmt.Sprintf("+ %s\n", v))
+				vf.WriteString(fmt.Sprintf("+ %s\n", v))
 			}
 
 			commits := "[ci-build]" + version
@@ -92,18 +66,21 @@ func NewCmdCommit() *cobra.Command {
 			if err != nil {
 				panic(err)
 			}
-			
-			status, err  := w.Status()
+
+			status, err := w.Status()
 			if err != nil {
 				panic(err)
 			}
 
 			var modified []string
 			for k := range status {
+				if k == "Dockerfile" || k == "Version.md" || k == "go.mod" || k == "go.sum" {
+					continue
+				}
 				modified = append(modified, k)
 			}
 
-			mf.WriteString(fmt.Sprintf("+ Modified: %s\n", strings.Join(modified, ", ")))
+			vf.WriteString(fmt.Sprintf("+ Modified: %s\n", strings.Join(modified, ", ")))
 
 			// Add all files to the staging area.
 			_, err = w.Add(".")
@@ -135,4 +112,45 @@ func NewCmdCommit() *cobra.Command {
 	cmd.Flags().StringVarP(&message, "message", "m", "", "Motifiying message")
 
 	return cmd
+}
+
+func getTagFromDockerfile(dockerfile string) (string, error) {
+	df, err := os.Open(dockerfile)
+	if err != nil {
+		return "", err
+	}
+	defer df.Close()
+	result, err := parser.Parse(df)
+	if err != nil {
+		return "", err
+	}
+
+	var version string
+	for _, child := range result.AST.Children {
+		if child.Next.Value == "TAG" {
+			if child.Next.Next == nil {
+				return "", fmt.Errorf("TAG is not set")
+			}
+			version = strings.Split(child.Next.Next.Value, ":")[1]
+			break
+		}
+	}
+	return version, nil
+}
+
+func getOrCreateVersionFile(vfp string) (*os.File, bool, error) {
+	_, err := os.Stat(vfp)
+	if os.IsNotExist(err) {
+		mf, err := os.Create(vfp)
+		if err != nil {
+			return nil, true, err
+		}
+		return mf, true, nil
+	} else {
+		mf, err := os.OpenFile(vfp, os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			return nil, false, err
+		}
+		return mf, false, nil
+	}
 }
