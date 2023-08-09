@@ -4,10 +4,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package main
 
 import (
-	"os"
-
 	"github.com/ForbiddenR/auto-commit/cmd"
-	"github.com/ForbiddenR/auto-commit/cmd/commit"
 	"github.com/joho/godotenv"
 )
 
@@ -20,8 +17,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	commit.User = os.Getenv("USERNAME")
-	commit.Email = os.Getenv("EMAIL")
-	commit.Author = os.Getenv("AUTHOR")
 	cmd.Execute()
 }
