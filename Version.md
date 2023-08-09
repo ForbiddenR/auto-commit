@@ -18,3 +18,8 @@
 + Author Exculibur 2023.8.9
 + rebuild
 + Modified: pkg/resource/visitor.go
+
+### latest
++ Author Exculibur 2023.8.9
++ remove unneccessary libraries
++ Modified: main.go
