@@ -13,3 +13,8 @@
 + Author Exculibur 2023.8.9
 + rebuild
 + Modified: pkg/resource/builder.go, pkg/resource/interfaces.go, pkg/resource/result.go, cmd/commit/commit.go, cmd/root.go, cmd/util/factory.go, pkg/resource/visitor.go, main.go
+
+### latest
++ Author Exculibur 2023.8.9
++ rebuild
++ Modified: pkg/resource/visitor.go

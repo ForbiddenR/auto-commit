@@ -1,7 +1,6 @@
 package resource
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -23,7 +22,10 @@ func (l EagerVisitorList) Visit() error {
 			errs = append(errs, err)
 		}
 	}
-	return errors.New(errs[0].Error())
+	if len(errs) > 0 {
+		return errs[0]
+	}
+	return nil
 }
 
 type DockerfileVisitor struct {
