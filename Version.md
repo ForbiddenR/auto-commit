@@ -23,3 +23,8 @@
 + Author Exculibur 2023.8.9
 + remove unneccessary libraries
 + Modified: main.go
+
+### latest
++ Author Exculibur 2023.8.9
++ move some packages
++ Modified: cmd/commit/commit.go, cmd/util/git.go
