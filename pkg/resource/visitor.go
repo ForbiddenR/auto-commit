@@ -119,7 +119,7 @@ func (v *VersionFileVisitor) Visit() error {
 	defer mf.Close()
 	fmt.Println("is new", new)
 	if !new {
-		mf.WriteString("\n")
+		mf.WriteString("\n\n")
 	}
 	mf.WriteString(fmt.Sprintf("### %s\n", v.Version))
 	var author string
