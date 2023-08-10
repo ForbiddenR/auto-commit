@@ -32,12 +32,9 @@
 ### latest
 + Author Exculibur 2023.8.9
 + use command line
-
-### latest
-+ Author Exculibur 2023.8.9
-+ use command line
-
-### latest
-+ Author Exculibur 2023.8.9
-+ use command line
 + Modified: cmd/commit/commit.go, cmd/util/git.go, pkg/resource/builder.go, pkg/resource/visitor.go
+
+### latest
++ Author Exculibur 2023.8.9
++ use command line
++ Modified: cmd/util/git.go, cmd/util/git_test.go
