@@ -100,13 +100,11 @@ func (v *VersionFileVisitor) Visit() error {
 	vfp := path.Join(v.Wd, "/Version.md")
 	_, err := os.Stat(vfp)
 	var mf *os.File
-	var new bool
 	if os.IsNotExist(err) {
 		mf, err = os.Create(vfp)
 		if err != nil {
 			return err
 		}
-		new = true
 	} else {
 		mf, err = os.OpenFile(vfp, os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
@@ -117,21 +115,29 @@ func (v *VersionFileVisitor) Visit() error {
 		return err
 	}
 	defer mf.Close()
-	template := "### %s\n"
-	if !new {
-		template = "\n" + template 
+	
+	_, err = mf.WriteString(fmt.Sprintf("### %s\n", v.Version))
+	if err != nil {
+		return err
 	}
-	fmt.Println("template is", template)
-	mf.WriteString(fmt.Sprintf(template, v.Version))
+		
 	var author string
 	if v.Author != "" {
 		author = v.Author
 	} else {
 		author = v.Username
 	}
-	mf.WriteString(fmt.Sprintf("+ Author %s %s\n", author, time.Now().Format("2006.1.2")))
+
+	_, err = mf.WriteString(fmt.Sprintf("+ Author %s %s\n", author, time.Now().Format("2006.1.2")))
+	if err != nil {
+		return err
+	}
+
 	for _, v := range strings.Split(v.Message, ",") {
-		mf.WriteString(fmt.Sprintf("+ %s\n", v))
+		_, err = mf.WriteString(fmt.Sprintf("+ %s\n", v))
+		if err != nil {
+			return err
+		}
 	}
 	v.Visitor = getVisitor(v.Flag, &Info{
 		VfFd:     mf,
@@ -282,7 +288,7 @@ type ModifyVisitor struct {
 }
 
 func (v *ModifyVisitor) Visit() error {
-	_, err := v.VfFd.WriteString(fmt.Sprintf("+ Modified: %s\n", strings.Join(v.Modifiled, ", ")))
+	_, err := v.VfFd.WriteString(fmt.Sprintf("+ Modified: %s\n\n", strings.Join(v.Modifiled, ", ")))
 	if err != nil {
 		return err
 	}
