@@ -106,7 +106,6 @@ func (v *VersionFileVisitor) Visit() error {
 		if err != nil {
 			return err
 		}
-		fmt.Println("Version is new")
 		new = true
 	} else {
 		mf, err = os.OpenFile(vfp, os.O_APPEND|os.O_WRONLY, 0644)
@@ -118,10 +117,12 @@ func (v *VersionFileVisitor) Visit() error {
 		return err
 	}
 	defer mf.Close()
+	template := "### %s\n"
 	if !new {
-		mf.WriteString("\n")
+		template = "\n" + template 
 	}
-	mf.WriteString(fmt.Sprintf("### %s\n", v.Version))
+	fmt.Println("template is", template)
+	mf.WriteString(fmt.Sprintf(template, v.Version))
 	var author string
 	if v.Author != "" {
 		author = v.Author
