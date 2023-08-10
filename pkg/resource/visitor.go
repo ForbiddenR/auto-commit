@@ -3,6 +3,7 @@ package resource
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 	"time"
@@ -11,6 +12,14 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/moby/buildkit/frontend/dockerfile/parser"
 )
+
+type Info struct {
+	VfFd     *os.File
+	Wd       string
+	Version  string
+	Username string
+	Email    string
+}
 
 type EagerVisitorList []Visitor
 
@@ -34,6 +43,7 @@ type DockerfileVisitor struct {
 	Author   string
 	Username string
 	Email    string
+	Flag     int
 }
 
 func (v *DockerfileVisitor) Visit() error {
@@ -64,25 +74,26 @@ func (v *DockerfileVisitor) Visit() error {
 	}
 
 	v.VersionFileVisitor = &VersionFileVisitor{
-		GitVisitor: &GitVisitor{},
-		Wd:         wd,
-		Version:    version,
-		Message:    v.Message,
-		Author:     v.Author,
-		Username:   v.Username,
-		Email:      v.Email,
+		Wd:       wd,
+		Version:  version,
+		Message:  v.Message,
+		Author:   v.Author,
+		Username: v.Username,
+		Email:    v.Email,
+		Flag:     v.Flag,
 	}
 	return v.VersionFileVisitor.Visit()
 }
 
 type VersionFileVisitor struct {
-	*GitVisitor
+	Visitor
 	Wd       string
 	Version  string
 	Message  string
 	Author   string
 	Username string
 	Email    string
+	Flag     int
 }
 
 func (v *VersionFileVisitor) Visit() error {
@@ -120,14 +131,77 @@ func (v *VersionFileVisitor) Visit() error {
 	for _, v := range strings.Split(v.Message, ",") {
 		mf.WriteString(fmt.Sprintf("+ %s\n", v))
 	}
-	v.GitVisitor = &GitVisitor{
+	v.Visitor = getVisitor(v.Flag, &Info{
 		VfFd:     mf,
 		Wd:       v.Wd,
 		Version:  v.Version,
 		Username: v.Username,
 		Email:    v.Email,
+	})
+	return v.Visitor.Visit()
+}
+
+func getVisitor(flat int, info *Info) Visitor {
+	switch flat {
+	case 0:
+		return &CommandVisitor{
+			VfFd:    info.VfFd,
+			Version: info.Version,
+		}
+	default:
+		return &GitVisitor{
+			VfFd:     info.VfFd,
+			Wd:       info.Wd,
+			Version:  info.Version,
+			Username: info.Username,
+			Email:    info.Email,
+		}
 	}
-	return v.GitVisitor.Visit()
+}
+
+type CommandVisitor struct {
+	*ModifyVisitor
+	VfFd    *os.File
+	Version string
+}
+
+func (v *CommandVisitor) Visit() error {
+	commits := fmt.Sprintf("[ci-build]%s", v.Version)
+
+	out, err := exec.Command("git", "diff", "--name-only").Output()
+	if err != nil {
+		return err
+	}
+
+	files := strings.Split(string(out)[:len(out)-1], "\n")
+
+	var modified []string
+
+	for _, k := range files {
+		if k == "Dockerfile" || k == "Version.md" || k == "go.mod" || k == "go.sum" {
+			continue
+		}
+		modified = append(modified, k)
+	}
+
+
+	v.ModifyVisitor = &ModifyVisitor{
+		Modifiled: modified,
+		VfFd:      v.VfFd,
+	}
+
+	err = v.ModifyVisitor.Visit()
+	if err != nil {
+		return err
+	}
+
+	err = exec.Command("git", "add", ".").Run()
+	if err != nil {
+		return err
+	}
+
+
+	return exec.Command("git", "commit", "-m", commits).Run()
 }
 
 type GitVisitor struct {

@@ -28,3 +28,16 @@
 + Author Exculibur 2023.8.9
 + move some packages
 + Modified: cmd/commit/commit.go, cmd/util/git.go
+
+### latest
++ Author Exculibur 2023.8.9
++ use command line
+
+### latest
++ Author Exculibur 2023.8.9
++ use command line
+
+### latest
++ Author Exculibur 2023.8.9
++ use command line
++ Modified: cmd/commit/commit.go, cmd/util/git.go, pkg/resource/builder.go, pkg/resource/visitor.go
