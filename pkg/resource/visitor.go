@@ -106,6 +106,7 @@ func (v *VersionFileVisitor) Visit() error {
 		if err != nil {
 			return err
 		}
+		fmt.Println("Version is new")
 		new = true
 	} else {
 		mf, err = os.OpenFile(vfp, os.O_APPEND|os.O_WRONLY, 0644)
