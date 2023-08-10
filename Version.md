@@ -38,3 +38,8 @@
 + Author Exculibur 2023.8.9
 + use command line
 + Modified: cmd/util/git.go, cmd/util/git_test.go
+
+### latest
++ Author Exculibur 2023.8.9
++ use command line
++ Modified: pkg/resource/visitor.go

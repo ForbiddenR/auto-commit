@@ -106,6 +106,7 @@ func (v *VersionFileVisitor) Visit() error {
 		if err != nil {
 			return err
 		}
+		new = true
 	} else {
 		mf, err = os.OpenFile(vfp, os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
@@ -281,5 +282,8 @@ type ModifyVisitor struct {
 
 func (v *ModifyVisitor) Visit() error {
 	_, err := v.VfFd.WriteString(fmt.Sprintf("+ Modified: %s\n", strings.Join(v.Modifiled, ", ")))
-	return err
+	if err != nil {
+		return err
+	}
+	return v.VfFd.Sync()
 }
