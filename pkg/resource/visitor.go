@@ -285,5 +285,5 @@ func (v *ModifyVisitor) Visit() error {
 	if err != nil {
 		return err
 	}
-	return v.VfFd.Sync()
+	return v.VfFd.Close()
 }
