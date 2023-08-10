@@ -100,7 +100,7 @@ func (v *VersionFileVisitor) Visit() error {
 	vfp := path.Join(v.Wd, "/Version.md")
 	_, err := os.Stat(vfp)
 	var mf *os.File
-	var new bool
+	var new bool = false
 	if os.IsNotExist(err) {
 		mf, err = os.Create(vfp)
 		if err != nil {
@@ -117,7 +117,7 @@ func (v *VersionFileVisitor) Visit() error {
 		return err
 	}
 	defer mf.Close()
-
+	fmt.Println("is new", new)
 	if !new {
 		mf.WriteString("\n")
 	}
