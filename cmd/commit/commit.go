@@ -10,6 +10,8 @@ type CommitOptions struct {
 	email    string
 	message  string
 	author   string
+	version  string
+	mode     string
 	flag     int
 }
 
@@ -34,6 +36,8 @@ func NewCmdCommit(f cmdutil.Factory) *cobra.Command {
 
 	cmd.Flags().StringVarP(&o.message, "message", "m", "", "Motifiying message")
 	cmd.Flags().StringVarP(&o.author, "author", "a", "", "Author")
+	cmd.Flags().StringVarP(&o.version, "version", "v", "", "Version")
+	cmd.Flags().StringVarP(&o.mode, "mode", "d", "dockerfile", "Mode")
 	cmd.Flags().IntVarP(&o.flag, "flat", "f", 0, "Flat")
 
 	return cmd
@@ -41,7 +45,7 @@ func NewCmdCommit(f cmdutil.Factory) *cobra.Command {
 
 func (o *CommitOptions) Run(f cmdutil.Factory) error {
 	r := f.NewBuilder().
-		Param("dockerfile", o.message, o.author, o.username, o.email, o.flag).
+		Param(o.mode, o.message, o.author, o.username, o.email, o.flag, o.version).
 		Do()
 
 	if err := r.Err(); err != nil {

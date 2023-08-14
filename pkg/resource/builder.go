@@ -60,7 +60,7 @@ func (b *Builder) visitorByPaths() *Result {
 	return result
 }
 
-func (b *Builder) Param(mode string, message, author, username, email string, flag int) *Builder {
+func (b *Builder) Param(mode string, message, author, username, email string, flag int, version string) *Builder {
 	switch mode {
 	case "dockerfile":
 		b.paths = append(b.paths, &DockerfileVisitor{
@@ -70,6 +70,8 @@ func (b *Builder) Param(mode string, message, author, username, email string, fl
 			Email:    email,
 			Flag:     flag,
 		})
+	case "direction":
+		b.errs = append(b.errs, errors.New("not implemented"))
 	default:
 		b.errs = append(b.errs, errors.New("invalid mode"))
 	}

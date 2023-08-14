@@ -19,6 +19,7 @@ type Info struct {
 	Version  string
 	Username string
 	Email    string
+	Message  string
 }
 
 type EagerVisitorList []Visitor
@@ -96,6 +97,18 @@ type VersionFileVisitor struct {
 	Flag     int
 }
 
+func NewVersionFileVisitor(wd, version, message, author, username, email string, flag int) *VersionFileVisitor {
+	return &VersionFileVisitor{
+		Wd:       wd,
+		Version:  version,
+		Message:  message,
+		Author:   author,
+		Username: username,
+		Email:    email,
+		Flag:     flag,
+	}
+}
+
 func (v *VersionFileVisitor) Visit() error {
 	vfp := path.Join(v.Wd, "/Version.md")
 	_, err := os.Stat(vfp)
@@ -115,12 +128,12 @@ func (v *VersionFileVisitor) Visit() error {
 		return err
 	}
 	defer mf.Close()
-	
+
 	_, err = mf.WriteString(fmt.Sprintf("### %s\n", v.Version))
 	if err != nil {
 		return err
 	}
-		
+
 	var author string
 	if v.Author != "" {
 		author = v.Author
@@ -145,6 +158,7 @@ func (v *VersionFileVisitor) Visit() error {
 		Version:  v.Version,
 		Username: v.Username,
 		Email:    v.Email,
+		Message: v.Message,
 	})
 	return v.Visitor.Visit()
 }
@@ -155,6 +169,7 @@ func getVisitor(flat int, info *Info) Visitor {
 		return &CommandVisitor{
 			VfFd:    info.VfFd,
 			Version: info.Version,
+			Message: info.Message,
 		}
 	default:
 		return &GitVisitor{
@@ -171,10 +186,11 @@ type CommandVisitor struct {
 	*ModifyVisitor
 	VfFd    *os.File
 	Version string
+	Message string
 }
 
 func (v *CommandVisitor) Visit() error {
-	commits := fmt.Sprintf("[ci-build]%s", v.Version)
+	commits := "[ci-build] %s %s"
 
 	out, err := exec.Command("git", "diff", "--name-only").Output()
 	if err != nil {
@@ -192,7 +208,6 @@ func (v *CommandVisitor) Visit() error {
 		modified = append(modified, k)
 	}
 
-
 	v.ModifyVisitor = &ModifyVisitor{
 		Modifiled: modified,
 		VfFd:      v.VfFd,
@@ -208,7 +223,7 @@ func (v *CommandVisitor) Visit() error {
 		return err
 	}
 
-
+	commits = fmt.Sprintf(commits, v.Version, v.Message)
 	return exec.Command("git", "commit", "-m", commits).Run()
 }
 
