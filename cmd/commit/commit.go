@@ -27,7 +27,7 @@ func NewCmdCommit(f cmdutil.Factory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "commit",
 		Short: "Commit changes",
-		Long:  `Commit changes to the repository. If you have multiple changes, separate them with a comma.`,
+		Long:  `Commit changes to the repository. If you have multiple changes, separate them with spaces.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return o.Run(f)
 		},
