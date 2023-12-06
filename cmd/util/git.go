@@ -9,6 +9,5 @@ func GetVariableFromGit(variable string) string {
 	if err != nil {
 		panic(err)
 	}
-
 	return string(out)[:len(out)-1]
 }

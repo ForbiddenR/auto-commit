@@ -146,7 +146,7 @@ func (v *VersionFileVisitor) Visit() error {
 		return err
 	}
 
-	for _, v := range strings.Split(v.Message, ",") {
+	for _, v := range strings.Split(v.Message, " ") {
 		_, err = mf.WriteString(fmt.Sprintf("+ %s\n", v))
 		if err != nil {
 			return err

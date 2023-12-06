@@ -32,7 +32,6 @@ func (b *Builder) Do() *Result {
 	if r.err != nil {
 		return r
 	}
-
 	return r
 }
 
@@ -42,21 +41,16 @@ func (b *Builder) visitorResult() *Result {
 			err: errors.New(b.errs[0].Error()),
 		}
 	}
-
 	if len(b.paths) > 0 {
 		return b.visitorByPaths()
 	}
-
 	return &Result{err: errors.New("no paths")}
 }
 
 func (b *Builder) visitorByPaths() *Result {
 	result := &Result{}
-
 	visitors := EagerVisitorList(b.paths)
-
 	result.visitor = visitors
-
 	return result
 }
 

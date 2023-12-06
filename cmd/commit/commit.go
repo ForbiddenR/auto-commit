@@ -24,7 +24,6 @@ func NewCommitOptions() *CommitOptions {
 
 func NewCmdCommit(f cmdutil.Factory) *cobra.Command {
 	o := NewCommitOptions()
-
 	cmd := &cobra.Command{
 		Use:   "commit",
 		Short: "Commit changes",
@@ -33,7 +32,6 @@ func NewCmdCommit(f cmdutil.Factory) *cobra.Command {
 			return o.Run(f)
 		},
 	}
-
 	cmd.Flags().StringVarP(&o.message, "message", "m", "", "Motifiying message")
 	cmd.Flags().StringVarP(&o.author, "author", "a", "", "Author")
 	cmd.Flags().StringVarP(&o.version, "version", "v", "", "Version")
@@ -47,10 +45,8 @@ func (o *CommitOptions) Run(f cmdutil.Factory) error {
 	r := f.NewBuilder().
 		Param(o.mode, o.message, o.author, o.username, o.email, o.flag, o.version).
 		Do()
-
 	if err := r.Err(); err != nil {
 		return err
 	}
-
 	return r.Visitor().Visit()
 }
