@@ -1,10 +1,12 @@
 ### latest
 + Author Exculibur 2023.8.10
-+ use command line
-+ Modified: pkg/resource/visitor.go
++ use
 
 ### latest
 + Author ForbiddenR 2023.8.14
-+ update the format
-+ Modified: cmd/commit/commit.go, pkg/resource/builder.go, pkg/resource/visitor.go
++ update
+
+### 241227
++ Author ForbiddenR 2025.02.27
++ update
 

@@ -1,52 +1,75 @@
 package commit
 
 import (
-	cmdutil "github.com/ForbiddenR/auto-commit/cmd/util"
+	"fmt"
+	"os"
+
+	"github.com/ForbiddenR/auto-commit/pkg/parser"
 	"github.com/spf13/cobra"
 )
 
 type CommitOptions struct {
-	username string
-	email    string
-	message  string
-	author   string
-	version  string
-	mode     string
-	flag     int
+	message string
+	prefix  string
 }
 
 func NewCommitOptions() *CommitOptions {
-	return &CommitOptions{
-		username: cmdutil.GetVariableFromGit("user.name"),
-		email:    cmdutil.GetVariableFromGit("user.email"),
-	}
+	return &CommitOptions{}
 }
 
-func NewCmdCommit(f cmdutil.Factory) *cobra.Command {
+func NewCmdCommit() *cobra.Command {
 	o := NewCommitOptions()
 	cmd := &cobra.Command{
 		Use:   "commit",
 		Short: "Commit changes",
 		Long:  `Commit changes to the repository. If you have multiple changes, separate them with spaces.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return o.Run(f)
+			return o.Run()
 		},
+		SilenceUsage: true,
 	}
 	cmd.Flags().StringVarP(&o.message, "message", "m", "", "Motifiying message")
-	cmd.Flags().StringVarP(&o.author, "author", "a", "", "Author")
-	cmd.Flags().StringVarP(&o.version, "version", "v", "", "Version")
-	cmd.Flags().StringVarP(&o.mode, "mode", "d", "dockerfile", "Mode")
-	cmd.Flags().IntVarP(&o.flag, "flat", "f", 0, "Flat")
-
+	cmd.Flags().StringVarP(&o.prefix, "prefix", "p", "", "Prefix")
 	return cmd
 }
 
-func (o *CommitOptions) Run(f cmdutil.Factory) error {
-	r := f.NewBuilder().
-		Param(o.mode, o.message, o.author, o.username, o.email, o.flag, o.version).
-		Do()
-	if err := r.Err(); err != nil {
+func (o *CommitOptions) Run() error {
+	df, err := os.Open("Dockerfile")
+	if err != nil {
 		return err
 	}
-	return r.Visitor().Visit()
+	defer df.Close()
+	dp := parser.DockerfileParser{}
+	err = dp.Parse(df)
+	if err != nil {
+		return err
+	}
+	p := parser.NewVersionParser(dp.String())
+	err = func() error {
+		file, err := os.Open("Version.md")
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		err = p.Parse(file)
+		if err != nil {
+			return err
+		}
+		err = p.AddRecord(o.message)
+		return err
+	}()
+	if err != nil {
+		return err
+	}
+	file, err := os.OpenFile("Version.md", os.O_TRUNC|os.O_RDWR, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = file.WriteString(p.String())
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%s %s %s\n", o.prefix, dp.String(), o.message)
+	return nil
 }
