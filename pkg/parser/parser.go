@@ -3,6 +3,7 @@ package parser
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -58,6 +59,25 @@ func NewVersionParser(latestVersion string) *VersionParser {
 	}
 }
 
+func (d *VersionParser) validate(lastVersion string) error {
+	if lastVersion == d.latestVersion {
+		return errors.New("no change committed")
+	}
+	nowYear := time.Now().Format("06")
+	recordYear := strings.Split(d.latestVersion, "_")[1][:2]
+	if nowYear != recordYear {
+		return fmt.Errorf("the year provided is out of date. year: %s", recordYear)
+	}
+	if lastYear := strings.Split(lastVersion, "_")[1][:2]; lastYear != recordYear {
+		lastTag := strings.Split(lastVersion, ".")[1]
+		latestTag := strings.Split(d.latestVersion, ".")[1]
+		if lastTag == latestTag {
+			return fmt.Errorf("tag is same in different years. tag: %s", lastTag)
+		}
+	}
+	return nil
+}
+
 func (d *VersionParser) Parse(file *os.File) error {
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
@@ -79,10 +99,7 @@ func (d *VersionParser) Parse(file *os.File) error {
 			d.datas = append(d.datas, data)
 		}
 	}
-	if d.datas[len(d.datas)-1].Header == d.latestVersion {
-		return fmt.Errorf("no change committed")
-	}
-	return nil
+	return d.validate(d.datas[len(d.datas)-1].Header)
 }
 
 func (d *VersionParser) AddRecord(record string) error {
