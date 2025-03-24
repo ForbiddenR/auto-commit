@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -63,7 +65,7 @@ func (d *VersionParser) validate(lastVersion string) error {
 	if lastVersion == d.latestVersion {
 		return errors.New("no change committed")
 	}
-	nowYear := time.Now().Format("06")
+	nowYear := strconv.Itoa(time.Now().Year() - 2000)
 	recordYear := strings.Split(d.latestVersion, "_")[1][:2]
 	if nowYear != recordYear {
 		return fmt.Errorf("the year provided is out of date. year: %s", recordYear)
@@ -85,15 +87,15 @@ func (d *VersionParser) Parse(file *os.File) error {
 		text := scanner.Text()
 		if strings.Contains(text, "###") {
 			data := &VersionStruct{
-				Header: strings.Split(text, " ")[1],
+				Header: strings.Fields(text)[1],
 			}
 			scanner.Scan()
-			data.Author = strings.Split(scanner.Text(), " ")[2:]
+			data.Author = strings.Fields(scanner.Text())[2:]
 			for scanner.Scan() {
 				if text := scanner.Text(); text == "" {
 					break
 				} else {
-					data.Context = append(data.Context, strings.Split(text, " ")[1])
+					data.Context = append(data.Context, strings.Fields(text)[1])
 				}
 			}
 			d.datas = append(d.datas, data)
@@ -103,23 +105,21 @@ func (d *VersionParser) Parse(file *os.File) error {
 }
 
 func (d *VersionParser) AddRecord(record string) error {
-	records := strings.Split(record, " ")
-	d.datas[len(d.datas)-1].Context = append(d.datas[len(d.datas)-1].Context, records...)
+	d.datas[len(d.datas)-1].Context = append(d.datas[len(d.datas)-1].Context, strings.Split(record, " ")...)
 	return nil
 }
 
 func (d *VersionParser) String() string {
 	buffer := bytes.NewBuffer([]byte{})
-	for i, data := range d.datas {
+	for i, data := range slices.All(d.datas) {
 		if i == len(d.datas)-1 {
 			fmt.Fprintf(buffer, "### %s\n", d.latestVersion)
 			fmt.Fprintf(buffer, "+ Author %s %s\n", data.Author[0], time.Now().Format("2006.01.02"))
 		} else {
 			fmt.Fprintf(buffer, "### %s\n", data.Header)
 			fmt.Fprintf(buffer, "+ Author %s\n", strings.Join(data.Author, " "))
-
 		}
-		for _, context := range data.Context {
+		for context := range slices.Values(data.Context) {
 			fmt.Fprintf(buffer, "+ %s\n", context)
 		}
 		fmt.Fprintln(buffer)
