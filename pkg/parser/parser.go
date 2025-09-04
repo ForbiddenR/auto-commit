@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"slices"
 	"strconv"
@@ -22,8 +23,8 @@ type DockerfileParser struct {
 	version string
 }
 
-func (d *DockerfileParser) Parse(file *os.File) error {
-	scanner := bufio.NewScanner(file)
+func (d *DockerfileParser) Parse(input io.Reader) error {
+	scanner := bufio.NewScanner(input)
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
 		text := scanner.Text()

@@ -1,6 +1,7 @@
 package commit
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 
@@ -34,13 +35,12 @@ func NewCmdCommit() *cobra.Command {
 }
 
 func (o *CommitOptions) Run() error {
-	df, err := os.Open("Dockerfile")
+	fileBytes, err := os.ReadFile("Dockerfile")
 	if err != nil {
 		return err
 	}
-	defer df.Close()
 	dp := parser.DockerfileParser{}
-	err = dp.Parse(df)
+	err = dp.Parse(bytes.NewBuffer(fileBytes))
 	if err != nil {
 		return err
 	}
